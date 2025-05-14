@@ -3,6 +3,28 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Flatkit color palette */
+  --primary: #448bff;
+  --primary-light: #e3f0ff;
+  --secondary: #6c757d;
+  --success: #31c971;
+  --info: #14bae4;
+  --warning: #f4c414;
+  --danger: #f54394;
+  --purple: #7266ba;
+  --indigo: #5066e1;
+  --blue: #448bff;
+  --teal: #0cc2aa;
+  --green: #31c971;
+  --yellow: #f4c414;
+  --orange: #ffa200;
+  --red: #f54394;
+  --pink: #ff5b8f;
+  --gray: #6c757d;
+  --gray-light: #f8f9fa;
+  --gray-dark: #343a40;
+  --border-color: #edf2f9;
 }
 
 @theme inline {
@@ -10,17 +32,68 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Flatkit theme colors */
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #131935;
     --foreground: #ededed;
+    --border-color: #22295f;
+    --primary-light: #1d2246;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+}
+
+/* Additional Flatkit-inspired styles */
+.bg-primary {
+  background-color: var(--primary);
+}
+.text-primary {
+  color: var(--primary);
+}
+.border-primary {
+  border-color: var(--primary);
+}
+
+.bg-success {
+  background-color: var(--success);
+}
+.text-success {
+  color: var(--success);
+}
+.border-success {
+  border-color: var(--success);
+}
+
+.bg-primary-light {
+  background-color: var(--primary-light);
+}
+.text-primary-light {
+  color: var(--primary-light);
+}
+.border-primary-light {
+  border-color: var(--primary-light);
+}
+
+/* Card and box shadows */
+.flatkit-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.flatkit-shadow-lg {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
