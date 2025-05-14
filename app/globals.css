@@ -97,3 +97,32 @@ body {
 .flatkit-shadow-lg {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
+
+/* Animation for notifications */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease forwards;
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+}
+.animate-fade-out-up {
+  animation: fadeOutUp 0.5s ease forwards;
+}

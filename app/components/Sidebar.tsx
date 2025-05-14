@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface SidebarItemProps {
   icon: ReactNode;
@@ -36,6 +39,8 @@ const SidebarItem = ({
 };
 
 export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
+  const pathname = usePathname();
+
   return (
     <aside
       className={`fixed top-0 left-0 h-screen ${
@@ -59,12 +64,19 @@ export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
             icon={<i className="fa-solid fa-house"></i>}
             text="Dashboard"
             href="/dashboard"
-            active={true}
+            active={pathname === "/dashboard"}
           />
           <SidebarItem
             icon={<i className="fa-solid fa-camera"></i>}
             text="Screenshot Tool"
             href="/screenshot-tool"
+            active={pathname?.includes("/screenshot-tool")}
+          />
+          <SidebarItem
+            icon={<i className="fa-solid fa-bookmark"></i>}
+            text="Presets"
+            href="/presets"
+            active={pathname?.includes("/presets")}
           />
           <SidebarItem
             icon={<i className="fa-solid fa-chart-line"></i>}

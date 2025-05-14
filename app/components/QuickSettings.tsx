@@ -1,9 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function QuickSettings() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+
+  useEffect(() => {
+    // On mount, get the theme from localStorage
+    const savedTheme = localStorage.getItem("theme") as
+      | "light"
+      | "dark"
+      | "system"
+      | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    } else {
+      // Default to system
+      setTheme("system");
+      applyTheme("system");
+    }
+  }, []);
+
+  const applyTheme = (newTheme: "light" | "dark" | "system") => {
+    const root = document.documentElement;
+    const isDarkMode =
+      newTheme === "dark" ||
+      (newTheme === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    if (isDarkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    localStorage.setItem("theme", newTheme);
+  };
+
+  const changeTheme = (newTheme: "light" | "dark" | "system") => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   return (
     <>
@@ -29,43 +68,46 @@ export default function QuickSettings() {
             </button>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600 dark:text-gray-300">
-                Dark Mode
-              </span>
-              <button className="w-10 h-5 bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
-                <span
-                  className={`w-4 h-4 transform transition-transform bg-white dark:bg-blue-500 shadow-sm absolute ${
-                    document?.documentElement?.classList.contains("dark")
-                      ? "translate-x-5"
-                      : "translate-x-0.5"
-                  }`}
-                ></span>
+          <div className="mb-3">
+            <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+              Theme
+            </label>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => changeTheme("light")}
+                className={`flex-1 px-2 py-1 text-xs rounded-sm ${
+                  theme === "light"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                }`}
+              >
+                Light
+              </button>
+              <button
+                onClick={() => changeTheme("dark")}
+                className={`flex-1 px-2 py-1 text-xs rounded-sm ${
+                  theme === "dark"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                }`}
+              >
+                Dark
+              </button>
+              <button
+                onClick={() => changeTheme("system")}
+                className={`flex-1 px-2 py-1 text-xs rounded-sm ${
+                  theme === "system"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                }`}
+              >
+                Auto
               </button>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600 dark:text-gray-300">
-                Compact Sidebar
-              </span>
-              <button className="w-10 h-5 bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
-                <span className="w-4 h-4 transform transition-transform bg-white shadow-sm absolute translate-x-0.5"></span>
-              </button>
-            </div>
-
-            <div>
-              <span className="text-xs text-gray-600 dark:text-gray-300 block mb-1">
-                Theme Color
-              </span>
-              <div className="flex space-x-1.5">
-                <button className="w-5 h-5 rounded-full bg-blue-500 hover:ring-1 hover:ring-offset-1 hover:ring-blue-500 focus:outline-none"></button>
-                <button className="w-5 h-5 rounded-full bg-indigo-500 hover:ring-1 hover:ring-offset-1 hover:ring-indigo-500 focus:outline-none"></button>
-                <button className="w-5 h-5 rounded-full bg-purple-500 hover:ring-1 hover:ring-offset-1 hover:ring-purple-500 focus:outline-none"></button>
-                <button className="w-5 h-5 rounded-full bg-green-500 hover:ring-1 hover:ring-offset-1 hover:ring-green-500 focus:outline-none"></button>
-                <button className="w-5 h-5 rounded-full bg-red-500 hover:ring-1 hover:ring-offset-1 hover:ring-red-500 focus:outline-none"></button>
-              </div>
-            </div>
+          <div className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <p>Ad Shotter v1.0.0</p>
           </div>
         </div>
       )}
