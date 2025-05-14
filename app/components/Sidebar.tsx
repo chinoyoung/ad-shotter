@@ -44,7 +44,7 @@ export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
     >
       <div className="py-3 px-3 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center">
-          <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white font-bold text-base">
+          <div className="flex items-center justify-center rounded-full w-8 h-8 bg-blue-500 text-white font-bold text-sm">
             AS
           </div>
           <span className="ml-2 font-medium text-base text-gray-800 dark:text-white">
@@ -60,6 +60,11 @@ export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
             text="Dashboard"
             href="/dashboard"
             active={true}
+          />
+          <SidebarItem
+            icon={<i className="fa-solid fa-camera"></i>}
+            text="Screenshot Tool"
+            href="/screenshot-tool"
           />
           <SidebarItem
             icon={<i className="fa-solid fa-chart-line"></i>}
