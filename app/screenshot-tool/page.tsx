@@ -74,10 +74,11 @@ export default function ScreenshotToolPage() {
         throw new Error(errorData.error || "Failed to capture screenshot");
       }
 
+      // Parse JSON response once
       const data = await response.json();
       setResult(data);
 
-      // Save to screenshot history
+      // Save to screenshot history and dispatch event
       saveToHistory({
         id: Date.now().toString(),
         timestamp: Date.now(),
@@ -88,10 +89,16 @@ export default function ScreenshotToolPage() {
         screenshotUrl: data.screenshotUrl,
         width: data.width,
         height: data.height,
+        cloudinaryId: data.cloudinaryId,
       });
 
+      // Set success notification with storage method info if available
+      const storageInfo = data.storageMethod
+        ? ` using ${data.storageMethod}`
+        : "";
       setNotification({
-        message: "Screenshot captured successfully!",
+        message:
+          data.message || `Screenshot captured successfully${storageInfo}!`,
         type: "success",
       });
     } catch (err) {
@@ -172,27 +179,23 @@ export default function ScreenshotToolPage() {
     }
   };
 
-  // Save screenshot to history in localStorage
+  // Save screenshot to history and dispatch event - no local storage
   const saveToHistory = (historyItem: ScreenshotHistoryItem) => {
     try {
-      const savedHistory = localStorage.getItem("screenshotHistory");
-      let history: ScreenshotHistoryItem[] = [];
-
-      if (savedHistory) {
-        history = JSON.parse(savedHistory);
+      // Dispatch a custom event to notify the dashboard of the new activity
+      try {
+        const event = new CustomEvent("screenshot-taken", {
+          detail: {
+            screenshotUrl: historyItem.screenshotUrl,
+            timestamp: historyItem.timestamp,
+          },
+        });
+        window.dispatchEvent(event);
+      } catch (eventError) {
+        console.error("Failed to dispatch screenshot event:", eventError);
       }
-
-      // Add new item at the beginning of the array
-      history.unshift(historyItem);
-
-      // Limit history to 20 items
-      if (history.length > 20) {
-        history = history.slice(0, 20);
-      }
-
-      localStorage.setItem("screenshotHistory", JSON.stringify(history));
     } catch (err) {
-      console.error("Failed to save to history", err);
+      console.error("Failed to process screenshot history", err);
     }
   };
 

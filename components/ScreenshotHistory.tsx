@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ImageInfo } from "@/lib/screenshot";
+import { getScreenshotActivities, ActivityItem } from "@/lib/activityService";
 
 export interface ScreenshotHistoryItem {
   id: string;
@@ -12,24 +13,65 @@ export interface ScreenshotHistoryItem {
   screenshotUrl: string;
   width: number;
   height: number;
+  cloudinaryId?: string;
 }
 
 export default function ScreenshotHistory() {
   const [history, setHistory] = useState<ScreenshotHistoryItem[]>([]);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [loading, setLoading] = useState(true);
+
+  // Function to load screenshot history from Firestore
+  const loadScreenshotHistory = async () => {
+    try {
+      setLoading(true);
+      const activities = await getScreenshotActivities(20);
+
+      // Convert ActivityItem to ScreenshotHistoryItem
+      const convertedHistory: ScreenshotHistoryItem[] = activities.map(
+        (activity) => {
+          const timestamp = activity.timestamp?.toDate?.()
+            ? activity.timestamp.toDate().getTime()
+            : Date.now();
+
+          return {
+            id: activity.id,
+            timestamp: timestamp,
+            url: activity.details?.url || "",
+            selector: activity.details?.selector || "",
+            viewportWidth: activity.details?.viewportWidth || 1280,
+            viewportHeight: activity.details?.viewportHeight || 800,
+            screenshotUrl: activity.details?.screenshotUrl || "",
+            width: activity.details?.width || 0,
+            height: activity.details?.height || 0,
+          };
+        }
+      );
+
+      setHistory(convertedHistory);
+    } catch (error) {
+      console.error("Failed to load screenshot history from Firestore", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Load history from localStorage on component mount
-    const savedHistory = localStorage.getItem("screenshotHistory");
-    if (savedHistory) {
-      try {
-        const parsedHistory = JSON.parse(savedHistory);
-        setHistory(parsedHistory);
-      } catch (err) {
-        console.error("Failed to parse screenshot history", err);
-      }
-    }
+    // Load history from Firestore on component mount
+    loadScreenshotHistory();
+
+    // Set up event listener for new screenshots
+    const handleScreenshotTaken = () => {
+      loadScreenshotHistory();
+    };
+
+    window.addEventListener("screenshot-taken", handleScreenshotTaken);
+
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener("screenshot-taken", handleScreenshotTaken);
+    };
   }, []);
 
   const formatDate = (timestamp: number) => {
@@ -54,7 +96,8 @@ export default function ScreenshotHistory() {
     if (
       window.confirm("Are you sure you want to clear your screenshot history?")
     ) {
-      localStorage.removeItem("screenshotHistory");
+      // We only clear the local display since we can't delete from Firestore easily
+      // A more complete implementation would include Firestore deletion with proper permissions
       setHistory([]);
     }
   };
@@ -75,16 +118,23 @@ export default function ScreenshotHistory() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Screenshot History</h2>
         <div className="flex flex-col items-center justify-center py-10 text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
-            <i className="fa-solid fa-camera text-gray-400 dark:text-gray-500 text-xl"></i>
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 mb-2">
-            No screenshots in history yet
-          </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 max-w-md">
-            Capture a screenshot using the form above to see it here. Your
-            history will be stored locally.
-          </p>
+          {loading ? (
+            <div className="py-10 flex justify-center items-center">
+              <div className="w-8 h-8 border-2 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
+                <i className="fa-solid fa-camera text-gray-400 dark:text-gray-500 text-xl"></i>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mb-2">
+                No screenshots in history yet
+              </p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 max-w-md">
+                Capture a screenshot using the form above to see it here.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -122,6 +172,13 @@ export default function ScreenshotHistory() {
           </div>
 
           <button
+            onClick={loadScreenshotHistory}
+            className="px-3 py-1.5 text-xs border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-1 focus:ring-blue-500 mr-2"
+          >
+            <i className="fa-solid fa-refresh mr-1"></i> Refresh
+          </button>
+
+          <button
             onClick={clearHistory}
             className="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded-md hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-900/20 focus:outline-none focus:ring-1 focus:ring-red-500"
           >
@@ -130,7 +187,11 @@ export default function ScreenshotHistory() {
         </div>
       </div>
 
-      {viewMode === "list" ? (
+      {loading ? (
+        <div className="py-20 flex justify-center items-center">
+          <div className="w-8 h-8 border-2 border-t-blue-500 border-blue-200 rounded-full animate-spin"></div>
+        </div>
+      ) : viewMode === "list" ? (
         <div className="space-y-4">
           {history.map((item) => (
             <div

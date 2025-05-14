@@ -3,8 +3,9 @@ import sharp from "sharp";
 import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { uploadImageToCloudinary } from "./cloudinary";
 
-// Make sure the screenshots directory exists
+// Make sure the screenshots directory exists (for fallback)
 const screenshotsDir = path.join(process.cwd(), "public", "screenshots");
 if (!fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir, { recursive: true });
@@ -25,6 +26,8 @@ export interface ScreenshotResult {
   width: number;
   height: number;
   images: ImageInfo[];
+  cloudinaryId?: string;
+  activityWarning?: string;
 }
 
 export async function takeScreenshot(
@@ -37,7 +40,7 @@ export async function takeScreenshot(
   try {
     // Launch browser
     browser = await puppeteer.launch({
-      headless: "new",
+      headless: true, // Use true instead of "new"
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
@@ -64,17 +67,38 @@ export async function takeScreenshot(
 
     // Generate a unique filename
     const filename = `${uuidv4()}.png`;
-    const filePath = path.join(screenshotsDir, filename);
 
-    // Save the screenshot
-    fs.writeFileSync(filePath, screenshotBuffer);
+    // Upload to Cloudinary
+    try {
+      const cloudinaryResult = await uploadImageToCloudinary(
+        screenshotBuffer,
+        filename
+      );
 
-    return {
-      screenshotUrl: `/screenshots/${filename}`,
-      width: dimensions.width,
-      height: dimensions.height,
-      images: imagesInfo,
-    };
+      return {
+        screenshotUrl: cloudinaryResult.secureUrl,
+        width: dimensions.width,
+        height: dimensions.height,
+        images: imagesInfo,
+        cloudinaryId: cloudinaryResult.publicId,
+      };
+    } catch (cloudinaryError) {
+      console.error(
+        "Cloudinary upload failed, falling back to local storage:",
+        cloudinaryError
+      );
+
+      // Fallback to local storage if Cloudinary upload fails
+      const filePath = path.join(screenshotsDir, filename);
+      fs.writeFileSync(filePath, screenshotBuffer);
+
+      return {
+        screenshotUrl: `/screenshots/${filename}`,
+        width: dimensions.width,
+        height: dimensions.height,
+        images: imagesInfo,
+      };
+    }
   } catch (error) {
     console.error("Error taking screenshot:", error);
     throw error;
