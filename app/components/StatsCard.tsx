@@ -27,13 +27,13 @@ export default function StatsCard({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+    <div className="bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800 p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">
           {title}
         </h3>
         <div
-          className={`w-8 h-8 rounded-full ${colorClasses[color]} flex items-center justify-center text-white text-sm`}
+          className={`w-8 h-8 ${colorClasses[color]} flex items-center justify-center text-white text-sm`}
         >
           {icon}
         </div>

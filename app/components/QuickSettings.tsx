@@ -9,14 +9,14 @@ export default function QuickSettings() {
     <>
       <button
         onClick={() => setSettingsOpen(!settingsOpen)}
-        className="fixed bottom-3 right-3 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg z-50 hover:bg-blue-600 transition-colors"
+        className="fixed bottom-3 right-3 w-8 h-8 bg-blue-500 text-white flex items-center justify-center shadow-lg z-50 hover:bg-blue-600 transition-colors"
         aria-label="Quick settings"
       >
         <i className="fa-solid fa-gear text-sm"></i>
       </button>
 
       {settingsOpen && (
-        <div className="fixed bottom-12 right-3 w-56 bg-white dark:bg-gray-900 rounded-md shadow-xl border border-gray-200 dark:border-gray-800 p-3 z-50">
+        <div className="fixed bottom-12 right-3 w-56 bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800 p-3 z-50">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-xs font-medium text-gray-800 dark:text-white">
               Settings
@@ -34,9 +34,9 @@ export default function QuickSettings() {
               <span className="text-xs text-gray-600 dark:text-gray-300">
                 Dark Mode
               </span>
-              <button className="w-10 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
+              <button className="w-10 h-5 bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
                 <span
-                  className={`w-4 h-4 rounded-full transform transition-transform bg-white dark:bg-blue-500 shadow-sm absolute ${
+                  className={`w-4 h-4 transform transition-transform bg-white dark:bg-blue-500 shadow-sm absolute ${
                     document?.documentElement?.classList.contains("dark")
                       ? "translate-x-5"
                       : "translate-x-0.5"
@@ -49,8 +49,8 @@ export default function QuickSettings() {
               <span className="text-xs text-gray-600 dark:text-gray-300">
                 Compact Sidebar
               </span>
-              <button className="w-10 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
-                <span className="w-4 h-4 rounded-full transform transition-transform bg-white shadow-sm absolute translate-x-0.5"></span>
+              <button className="w-10 h-5 bg-gray-200 dark:bg-gray-700 flex items-center transition-colors relative focus:outline-none">
+                <span className="w-4 h-4 transform transition-transform bg-white shadow-sm absolute translate-x-0.5"></span>
               </button>
             </div>
 

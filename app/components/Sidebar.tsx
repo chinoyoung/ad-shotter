@@ -24,7 +24,7 @@ const SidebarItem = ({
     >
       <Link
         href={href}
-        className={`flex items-center px-3 py-2 text-xs rounded-md transition-colors ${
+        className={`flex items-center px-3 py-2 text-xs transition-colors ${
           active ? "" : "text-gray-600 dark:text-gray-300"
         }`}
       >
@@ -44,11 +44,11 @@ export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
     >
       <div className="py-3 px-3 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-500 text-white font-bold text-base">
-            F
+          <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white font-bold text-base">
+            AS
           </div>
           <span className="ml-2 font-medium text-base text-gray-800 dark:text-white">
-            FlatKit
+            Ad Shotter
           </span>
         </div>
       </div>

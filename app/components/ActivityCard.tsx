@@ -18,10 +18,10 @@ const ActivityItem = ({
   return (
     <div className="flex items-start mb-3 last:mb-0">
       <div
-        className={`w-7 h-7 rounded-full ${iconColor} flex items-center justify-center text-white text-xs font-medium shrink-0`}
+        className={`w-7 h-7 ${iconColor} flex items-center justify-center text-white text-xs font-medium shrink-0`}
       >
         {avatar ? (
-          <img src={avatar} alt={name} className="w-full h-full rounded-full" />
+          <img src={avatar} alt={name} className="w-full h-full" />
         ) : (
           initials
         )}
@@ -38,7 +38,7 @@ const ActivityItem = ({
 
 export default function ActivityCard() {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+    <div className="bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800 p-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-base font-medium text-gray-800 dark:text-white">
           Recent Activity
