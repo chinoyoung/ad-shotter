@@ -62,3 +62,21 @@ export const PresetSubcategories: Record<string, string[]> = {
     "NN. Embassy Directory Feature",
   ],
 };
+
+export interface BulkScreenshotItem {
+  url: string;
+  selector: string;
+  category?: string;
+  subcategory?: string;
+  description?: string;
+}
+
+export interface BulkScreenshotPreset {
+  id?: string;
+  name: string;
+  items: BulkScreenshotItem[];
+  viewportWidth: number;
+  viewportHeight: number;
+  createdAt?: Date | string | number;
+  updatedAt?: Date | string | number;
+}

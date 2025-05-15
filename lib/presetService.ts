@@ -15,9 +15,10 @@ import {
   QuerySnapshot,
   Timestamp,
 } from "firebase/firestore";
-import { ScreenshotPreset } from "./types";
+import { ScreenshotPreset, BulkScreenshotPreset } from "./types";
 
 const PRESETS_COLLECTION = "screenshotPresets";
+const BULK_PRESETS_COLLECTION = "bulkScreenshotPresets";
 
 // Convert Firestore Timestamp to a serializable format
 const convertTimestamps = (data: any) => {
@@ -40,6 +41,20 @@ const formatPreset = (doc: DocumentData): ScreenshotPreset => {
   return {
     id: doc.id,
     ...convertTimestamps(data),
+  };
+};
+
+// Format bulk preset from Firestore
+const formatBulkPreset = (doc: DocumentData): BulkScreenshotPreset => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    name: data.name || "",
+    items: data.items || [],
+    viewportWidth: data.viewportWidth || 1280,
+    viewportHeight: data.viewportHeight || 800,
+    createdAt: data.createdAt ? convertTimestamps(data.createdAt) : null,
+    updatedAt: data.updatedAt ? convertTimestamps(data.updatedAt) : null,
   };
 };
 
@@ -141,3 +156,70 @@ export const deletePreset = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+// Create a new bulk screenshot preset
+export async function createBulkPreset(
+  preset: BulkScreenshotPreset
+): Promise<string> {
+  const presetData = {
+    ...preset,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  const docRef = await addDoc(
+    collection(db, BULK_PRESETS_COLLECTION),
+    presetData
+  );
+  return docRef.id;
+}
+
+// Update an existing bulk screenshot preset
+export async function updateBulkPreset(
+  preset: BulkScreenshotPreset
+): Promise<void> {
+  if (!preset.id) {
+    throw new Error("Preset ID is required for updates");
+  }
+
+  const presetData = {
+    ...preset,
+    updatedAt: serverTimestamp(),
+  };
+
+  // Remove id from the data to be updated
+  delete presetData.id;
+
+  const presetRef = doc(db, BULK_PRESETS_COLLECTION, preset.id);
+  await updateDoc(presetRef, presetData);
+}
+
+// Get all bulk screenshot presets
+export async function getAllBulkPresets(): Promise<BulkScreenshotPreset[]> {
+  const q = query(
+    collection(db, BULK_PRESETS_COLLECTION),
+    orderBy("updatedAt", "desc")
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(formatBulkPreset);
+}
+
+// Get a specific bulk screenshot preset by ID
+export async function getBulkPresetById(
+  id: string
+): Promise<BulkScreenshotPreset | null> {
+  const presetRef = doc(db, BULK_PRESETS_COLLECTION, id);
+  const presetSnap = await getDoc(presetRef);
+
+  if (presetSnap.exists()) {
+    return formatBulkPreset(presetSnap);
+  } else {
+    return null;
+  }
+}
+
+// Delete a bulk screenshot preset
+export async function deleteBulkPreset(id: string): Promise<void> {
+  const presetRef = doc(db, BULK_PRESETS_COLLECTION, id);
+  await deleteDoc(presetRef);
+}

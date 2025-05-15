@@ -1,14 +1,25 @@
+import "server-only"; // Mark this module as server-side only
 import puppeteer, { Browser, Page } from "puppeteer";
 import sharp from "sharp";
-import fs from "fs";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import { uploadImageToCloudinary } from "./cloudinary";
+import { v4 as uuidv4 } from "uuid";
 
-// Make sure the screenshots directory exists (for fallback)
+// Server-side only imports
+import * as fs from "fs";
+import * as path from "path";
+
+// Declare screenshots directory location
 const screenshotsDir = path.join(process.cwd(), "public", "screenshots");
-if (!fs.existsSync(screenshotsDir)) {
-  fs.mkdirSync(screenshotsDir, { recursive: true });
+
+// Make sure the screenshots directory exists (server-side only)
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  try {
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true });
+    }
+  } catch (error) {
+    console.error("Failed to create screenshots directory:", error);
+  }
 }
 
 export interface ImageInfo {
@@ -90,7 +101,21 @@ export async function takeScreenshot(
 
       // Fallback to local storage if Cloudinary upload fails
       const filePath = path.join(screenshotsDir, filename);
-      fs.writeFileSync(filePath, screenshotBuffer);
+
+      // Safely write the file only on the server
+      try {
+        // Ensure we have a proper Buffer
+        const buffer = Buffer.isBuffer(screenshotBuffer)
+          ? screenshotBuffer
+          : Buffer.from(screenshotBuffer);
+        fs.writeFileSync(filePath, buffer);
+      } catch (fsError) {
+        console.error("Error writing to filesystem:", fsError);
+        // Return error in response if we can't save the image
+        throw new Error(
+          "Failed to save screenshot locally after Cloudinary failure"
+        );
+      }
 
       return {
         screenshotUrl: `/screenshots/${filename}`,
@@ -126,7 +151,9 @@ async function takeElementScreenshot(
   const element = await page.$(selector);
   if (!element) throw new Error(`Element not found: ${selector}`);
 
-  return await element.screenshot();
+  const screenshotData = await element.screenshot();
+  // Convert Uint8Array to Buffer if needed
+  return Buffer.from(screenshotData);
 }
 
 async function getImagesInfo(

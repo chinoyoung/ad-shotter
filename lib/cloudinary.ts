@@ -1,60 +1,21 @@
-import { v2 as cloudinary } from "cloudinary";
+// This file provides a universal API for Cloudinary operations
+// It will use the server version on the server and client version on the client
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET,
-  secure: true,
-});
+// Import both client and server implementations
+import * as CloudinaryServer from "./cloudinary.server";
+import * as CloudinaryClient from "./cloudinary.client";
 
-export interface CloudinaryUploadResult {
-  publicId: string;
-  url: string;
-  secureUrl: string;
-  width: number;
-  height: number;
-}
+// Determine which implementation to use
+const isServer = typeof window === "undefined";
 
-/**
- * Uploads an image buffer to Cloudinary
- *
- * @param imageBuffer - The image buffer to upload
- * @param folderName - The folder to upload to in Cloudinary
- * @returns The upload result with image details
- */
-export async function uploadImageToCloudinary(
-  imageBuffer: Buffer,
-  fileName: string
-): Promise<CloudinaryUploadResult> {
-  return new Promise((resolve, reject) => {
-    const uploadOptions = {
-      folder: "screenshots",
-      public_id: fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
-      upload_preset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-      resource_type: "image",
-    };
+// Export the appropriate implementation
+export const uploadImageToCloudinary = isServer
+  ? CloudinaryServer.uploadImageToCloudinary
+  : CloudinaryClient.uploadImageToCloudinary;
 
-    // Use the upload stream API for buffers
-    cloudinary.uploader
-      .upload_stream(uploadOptions, (error, result) => {
-        if (error) {
-          console.error("Cloudinary upload error:", error);
-          return reject(error);
-        }
+export const deleteImageFromCloudinary = isServer
+  ? CloudinaryServer.deleteImageFromCloudinary
+  : CloudinaryClient.deleteImageFromCloudinary;
 
-        if (!result) {
-          return reject(new Error("Upload failed - no result returned"));
-        }
-
-        resolve({
-          publicId: result.public_id,
-          url: result.url,
-          secureUrl: result.secure_url,
-          width: result.width,
-          height: result.height,
-        });
-      })
-      .end(imageBuffer);
-  });
-}
+// Re-export the interface
+export type CloudinaryUploadResult = CloudinaryServer.CloudinaryUploadResult;

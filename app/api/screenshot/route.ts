@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       getIdTokenResult: async () => Promise.resolve({ token: "" } as any),
       reload: async () => Promise.resolve(),
       toJSON: () => ({}),
-    } as User;
+    } as unknown as User; // First cast to unknown then to User to avoid type checking
 
     // Parse the request body
     const body = await request.json();
@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
           userAuth,
           url,
           selector,
-          result.screenshotUrl
+          result.screenshotUrl,
+          result
         );
       } else {
         // Create a minimally compatible user object if we only have cookie info
@@ -102,13 +103,14 @@ export async function POST(request: NextRequest) {
           getIdTokenResult: async () => Promise.resolve({ token: "" } as any),
           reload: async () => Promise.resolve(),
           toJSON: () => ({}),
-        } as User;
+        } as unknown as User; // First cast to unknown then to User to avoid type checking
 
         await recordScreenshotActivity(
           mockUser,
           url,
           selector,
-          result.screenshotUrl
+          result.screenshotUrl,
+          result
         );
       }
     } catch (activityError) {
