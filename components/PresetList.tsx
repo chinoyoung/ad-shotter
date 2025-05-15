@@ -125,14 +125,8 @@ export default function PresetList({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h2 className="text-lg font-semibold">Ad Screenshot Presets</h2>
-        <button
-          onClick={onCreateNew}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Create New
-        </button>
       </div>
 
       {notification && (

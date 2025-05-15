@@ -383,7 +383,9 @@ export default function ScreenshotToolPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Ad Shotter Tool</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+        Ad Shotter Tool
+      </h1>
 
       {showPresetForm ? (
         <PresetForm

@@ -1,13 +1,38 @@
-import { ReactNode } from "react";
-import Sidebar from "../components/Sidebar";
+"use client";
 
-export default function PresetsLayout({ children }: { children: ReactNode }) {
+import { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import QuickSettings from "../components/QuickSettings";
+import AuthGuard from "@/components/AuthGuard";
+
+export default function PresetsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="pl-56 pt-6 w-full min-h-screen bg-gray-50 dark:bg-gray-900">
-        <main className="px-6 pb-6 max-w-7xl mx-auto">{children}</main>
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Sidebar isOpen={sidebarOpen} />
+        <Header toggleSidebar={toggleSidebar} />
+        <main className="pt-20 px-3 lg:px-4 py-4 lg:ml-56 transition-all duration-300">
+          <div
+            className={`fixed inset-0 bg-black/50 z-30 lg:hidden transition-opacity ${
+              sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={toggleSidebar}
+          />
+          {children}
+        </main>
+        <QuickSettings />
       </div>
-    </div>
+    </AuthGuard>
   );
 }

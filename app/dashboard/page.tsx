@@ -90,8 +90,8 @@ export default function Dashboard() {
   };
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
           Dashboard
         </h1>
         <button className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium flex items-center">
