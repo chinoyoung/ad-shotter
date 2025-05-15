@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import StatsCard from "../components/StatsCard";
-import ChartCard from "../components/ChartCard";
 import ActivityCard from "../components/ActivityCard";
+import RecentPresetsCard from "../components/RecentPresetsCard";
 import { getScreenshotActivities } from "@/lib/activityService";
-import { getAllPresets } from "@/lib/presetService";
+import { getAllPresets, getAllBulkPresets } from "@/lib/presetService";
 import { PresetCategories } from "@/lib/types";
 
 interface DashboardStats {
@@ -39,8 +39,11 @@ export default function Dashboard() {
         // Get screenshots
         const screenshots = await getScreenshotActivities(50);
 
-        // Get presets
-        const presets = await getAllPresets();
+        // Get presets and bulk presets
+        const [presets, bulkPresets] = await Promise.all([
+          getAllPresets(),
+          getAllBulkPresets(),
+        ]);
 
         // Get ad types (categories)
         const adTypesCount = Object.keys(PresetCategories).length;
@@ -51,7 +54,7 @@ export default function Dashboard() {
         // Update stats
         setStats({
           totalScreenshots: screenshots.length,
-          totalPresets: presets.length,
+          totalPresets: presets.length + bulkPresets.length,
           totalAdTypes: adTypesCount,
           screenshotGrowth: 12, // Example value
           presetGrowth: 8, // Example value
@@ -128,13 +131,10 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts and Activity */}
+      {/* Presets and Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <ChartCard
-            title="Screenshot Activity"
-            subtitle="Showing daily screenshot activity over time"
-          />
+          <RecentPresetsCard />
         </div>
         <div>
           <ActivityCard />
