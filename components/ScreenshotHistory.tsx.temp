@@ -26,13 +26,11 @@ export default function ScreenshotHistory() {
   const [expandedBulkGroup, setExpandedBulkGroup] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [loading, setLoading] = useState(true);
-  // Add error state for displaying user-friendly messages
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
-  // State for image modal
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Pagination state
@@ -81,64 +79,6 @@ export default function ScreenshotHistory() {
     }
   };
 
-  // Group history items by bulk preset ID
-  const getGroupedHistory = () => {
-    // Create a map of bulk preset IDs to arrays of history items
-    const groupedMap = new Map<string, ScreenshotHistoryItem[]>();
-    
-    // Group for items not in a bulk preset
-    const nonBulkItems: ScreenshotHistoryItem[] = [];
-    
-    // Process all history items
-    history.forEach((item) => {
-      if (item.bulkPresetId) {
-        // This item belongs to a bulk preset
-        const key = item.bulkPresetId;
-        if (!groupedMap.has(key)) {
-          groupedMap.set(key, []);
-        }
-        groupedMap.get(key)?.push(item);
-      } else {
-        // This item doesn't belong to a bulk preset
-        nonBulkItems.push(item);
-      }
-    });
-    
-    // Sort items within each group by timestamp
-    groupedMap.forEach((items) => {
-      items.sort((a, b) => b.timestamp - a.timestamp);
-    });
-    
-    // Sort non-bulk items by timestamp (newest first)
-    nonBulkItems.sort((a, b) => b.timestamp - a.timestamp);
-    
-    return {
-      bulkGroups: Array.from(groupedMap.entries()),
-      nonBulkItems,
-    };
-  };
-
-  // Calculate the current items to display based on pagination
-  const getCurrentItems = () => {
-    const { bulkGroups, nonBulkItems } = getGroupedHistory();
-    
-    // When we have bulk groups, we need special handling for pagination
-    if (bulkGroups.length > 0) {
-      // For simplicity in this implementation, we'll show all bulk groups
-      // plus a subset of non-bulk items up to itemsPerPage
-      const nonBulkToShow = nonBulkItems.slice(0, itemsPerPage);
-      return { bulkGroups, nonBulkItems: nonBulkToShow };
-    } else {
-      // No bulk groups, just paginate the non-bulk items
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      return { 
-        bulkGroups: [], 
-        nonBulkItems: nonBulkItems.slice(startIndex, endIndex) 
-      };
-    }
-  };
-
   useEffect(() => {
     // Load history from Firestore on component mount
     loadScreenshotHistory();
@@ -155,6 +95,75 @@ export default function ScreenshotHistory() {
       window.removeEventListener("screenshot-taken", handleScreenshotTaken);
     };
   }, []);
+
+  // Toggle expanded bulk group
+  const toggleBulkGroupExpansion = (bulkPresetId: string | undefined) => {
+    if (!bulkPresetId) return;
+
+    if (expandedBulkGroup === bulkPresetId) {
+      setExpandedBulkGroup(null);
+    } else {
+      setExpandedBulkGroup(bulkPresetId);
+    }
+  };
+
+  // Group history items by bulk preset ID
+  const getGroupedHistory = () => {
+    // Create a map of bulk preset IDs to arrays of history items
+    const groupedMap = new Map<string, ScreenshotHistoryItem[]>();
+
+    // Group for items not in a bulk preset
+    const nonBulkItems: ScreenshotHistoryItem[] = [];
+
+    // Process all history items
+    history.forEach((item) => {
+      if (item.bulkPresetId) {
+        // This item belongs to a bulk preset
+        const key = item.bulkPresetId;
+        if (!groupedMap.has(key)) {
+          groupedMap.set(key, []);
+        }
+        groupedMap.get(key)?.push(item);
+      } else {
+        // This item doesn't belong to a bulk preset
+        nonBulkItems.push(item);
+      }
+    });
+
+    // Sort items within each group by timestamp
+    groupedMap.forEach((items, key) => {
+      items.sort((a, b) => b.timestamp - a.timestamp);
+    });
+
+    // Sort non-bulk items by timestamp (newest first)
+    nonBulkItems.sort((a, b) => b.timestamp - a.timestamp);
+
+    return {
+      bulkGroups: Array.from(groupedMap.entries()),
+      nonBulkItems,
+    };
+  };
+
+  // Calculate the current items to display based on pagination
+  const getCurrentItems = () => {
+    const { bulkGroups, nonBulkItems } = getGroupedHistory();
+
+    // When we have bulk groups, we need special handling for pagination
+    if (bulkGroups.length > 0) {
+      // For simplicity in this implementation, we'll show all bulk groups
+      // plus a subset of non-bulk items up to itemsPerPage
+      const nonBulkToShow = nonBulkItems.slice(0, itemsPerPage);
+      return { bulkGroups, nonBulkItems: nonBulkToShow };
+    } else {
+      // No bulk groups, just paginate the non-bulk items
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return { 
+        bulkGroups: [], 
+        nonBulkItems: nonBulkItems.slice(startIndex, endIndex) 
+      };
+    }
+  };
 
   // Calculate total pages for pagination
   const totalPages = Math.ceil(getGroupedHistory().nonBulkItems.length / itemsPerPage);
@@ -195,23 +204,11 @@ export default function ScreenshotHistory() {
     }
   };
 
-  // Toggle expanded bulk group
-  const toggleBulkGroupExpansion = (bulkPresetId: string | undefined) => {
-    if (!bulkPresetId) return;
-    
-    if (expandedBulkGroup === bulkPresetId) {
-      setExpandedBulkGroup(null);
-    } else {
-      setExpandedBulkGroup(bulkPresetId);
-    }
-  };
-
   const clearHistory = () => {
     if (
       window.confirm("Are you sure you want to clear your screenshot history?")
     ) {
       // We only clear the local display since we can't delete from Firestore easily
-      // A more complete implementation would include Firestore deletion with proper permissions
       setHistory([]);
     }
   };
@@ -290,6 +287,55 @@ export default function ScreenshotHistory() {
         setLoading(false);
       }
     }
+  };
+
+  // Helper function to calculate and display scale factor
+  const renderScaleFactor = (img: ImageInfo) => {
+    const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
+    let scaleClass = "";
+    
+    if (scale > 100) {
+      scaleClass = "text-orange-600 dark:text-orange-400";
+    } else if (scale < 90) {
+      scaleClass = "text-blue-600 dark:text-blue-400";
+    }
+    
+    return (
+      <span className={scaleClass}>
+        {scale}%
+        {scale !== 100 && (
+          <span className="ml-1 text-xs group relative">
+            ({scale > 100 ? 'upscaled' : 'downscaled'})
+            <span className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 mb-1">
+              {scale > 100 
+                ? 'Image is displayed larger than its natural size' 
+                : 'Image is displayed smaller than its natural size'}
+            </span>
+          </span>
+        )}
+      </span>
+    );
+  };
+  
+  // Helper function to render compact scale factor (for grid view)
+  const renderCompactScaleFactor = (img: ImageInfo) => {
+    const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
+    let scaleClass = "text-gray-700 dark:text-gray-300";
+    
+    if (scale > 100) {
+      scaleClass = "text-orange-600 dark:text-orange-400";
+    } else if (scale < 90) {
+      scaleClass = "text-blue-600 dark:text-blue-400";
+    }
+    
+    return (
+      <span className={scaleClass}>
+        {scale}%
+        <span className="ml-1 text-[9px] block truncate">
+          {scale > 100 ? '(upscaled)' : scale < 90 ? '(downscaled)' : ''}
+        </span>
+      </span>
+    );
   };
 
   if (history.length === 0) {
@@ -551,23 +597,7 @@ export default function ScreenshotHistory() {
                                       key={index}
                                       className="p-3 border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
                                     >
-                                      <div className="flex items-center gap-3 mb-3">
-                                        <div className="h-14 w-14 bg-gray-100 dark:bg-gray-700 rounded-md flex-shrink-0 overflow-hidden">
-                                          <img 
-                                            src={img.src} 
-                                            alt={img.alt || `Image ${index + 1}`} 
-                                            className="h-full w-full object-contain"
-                                          />
-                                        </div>
-                                        <div className="truncate">
-                                          <div className="font-medium truncate">
-                                            {new URL(img.src).pathname.split("/").pop()}
-                                          </div>
-                                          <div className="text-gray-500 dark:text-gray-400 truncate">
-                                            {img.alt || "No alt text"}
-                                          </div>
-                                        </div>
-                                      </div>
+                                      {/* Image content */}
                                     </div>
                                   ))}
                                 </div>
@@ -716,10 +746,7 @@ export default function ScreenshotHistory() {
                                     src={img.src} 
                                     alt={img.alt || `Image ${index + 1}`} 
                                     className="h-full w-full object-contain cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedImage(img.src);
-                                    }}
+                                    onClick={() => setSelectedImage(img.src)}
                                   />
                                 </div>
                                 <div className="truncate">
@@ -729,6 +756,14 @@ export default function ScreenshotHistory() {
                                   <div className="text-gray-500 dark:text-gray-400 truncate">
                                     {img.alt || "No alt text"}
                                   </div>
+                                  <a
+                                    href={img.src}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm mt-1 inline-block"
+                                  >
+                                    <i className="fa-solid fa-external-link-alt mr-1"></i> View Original
+                                  </a>
                                 </div>
                               </div>
                               
@@ -755,27 +790,7 @@ export default function ScreenshotHistory() {
                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
                                   <h4 className="text-xs font-medium mb-1">Scale Factor</h4>
                                   <p className="text-sm font-mono">
-                                    {(() => {
-                                      const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
-                                      let scaleClass = "";
-                                      
-                                      if (scale > 100) {
-                                        scaleClass = "text-orange-600 dark:text-orange-400";
-                                      } else if (scale < 90) {
-                                        scaleClass = "text-blue-600 dark:text-blue-400";
-                                      }
-                                      
-                                      return (
-                                        <span className={scaleClass}>
-                                          {scale}%
-                                          {scale !== 100 && (
-                                            <span className="ml-1 text-xs">
-                                              ({scale > 100 ? 'upscaled' : 'downscaled'})
-                                            </span>
-                                          )}
-                                        </span>
-                                      );
-                                    })()}
+                                    {renderScaleFactor(img)}
                                   </p>
                                 </div>
                               </div>
@@ -813,10 +828,10 @@ export default function ScreenshotHistory() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-6">
           {notification && (
             <div
-              className={`col-span-full mb-2 p-3 rounded-md ${
+              className={`mb-4 p-3 rounded-md ${
                 notification.type === "success"
                   ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
                   : notification.type === "error"
@@ -841,7 +856,7 @@ export default function ScreenshotHistory() {
           
           {/* Render bulk groups first */}
           {getCurrentItems().bulkGroups.map(([bulkPresetId, items]) => (
-            <div key={bulkPresetId} className="col-span-full mb-6">
+            <div key={bulkPresetId} className="mb-6">
               <div 
                 className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3 rounded-t-lg border border-blue-200 dark:border-blue-800 cursor-pointer"
                 onClick={() => toggleBulkGroupExpansion(bulkPresetId)}
@@ -895,10 +910,37 @@ export default function ScreenshotHistory() {
                               </p>
                             </div>
                             
+                            {/* Images summary */}
+                            {item.images && item.images.length > 0 && (
+                              <button
+                                onClick={() => toggleItemExpansion(item.id)}
+                                className="flex items-center justify-between text-xs bg-blue-50 dark:bg-blue-900/30 p-2 rounded-md text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                              >
+                                <span>
+                                  <i className="fa-regular fa-image mr-1"></i>
+                                  {item.images.length} {item.images.length === 1 ? 'image' : 'images'}
+                                </span>
+                                <i className={`fa-solid ${expandedItem === item.id ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                              </button>
+                            )}
+                            
+                            {/* Expanded image details */}
+                            {expandedItem === item.id && item.images && item.images.length > 0 && (
+                              <div className="mt-1 space-y-2 max-h-80 overflow-y-auto">
+                                {item.images.map((img, index) => (
+                                  <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 p-2 text-xs">
+                                    {/* Image content */}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
                             {/* Actions */}
                             <div className="flex justify-end gap-1 mt-1">
                               <button
-                                onClick={() => deleteScreenshot(item.id, item.cloudinaryId)}
+                                onClick={() =>
+                                  deleteScreenshot(item.id, item.cloudinaryId)
+                                }
                                 className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                                 title="Delete Screenshot"
                               >
@@ -930,155 +972,143 @@ export default function ScreenshotHistory() {
           ))}
           
           {/* Render non-bulk items */}
-          {getCurrentItems().nonBulkItems.map((item) => (
-            <div
-              key={item.id}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
-            >
-              <div className="aspect-video bg-gray-100 dark:bg-gray-900 relative overflow-hidden flex items-center justify-center">
-                <img
-                  src={item.screenshotUrl}
-                  alt={`Screenshot of ${item.selector}`}
-                  className="object-contain w-full h-full cursor-pointer"
-                  onClick={() => setSelectedImage(item.screenshotUrl)}
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs py-1 px-2 truncate">
-                  {item.selector}
-                </div>
-              </div>
-              <div className="p-3">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-gray-900 dark:text-white truncate max-w-[150px] text-sm">
-                    {new URL(item.url).hostname}
-                  </h3>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(item.timestamp).split(",")[0]}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 mt-2">
-                  {/* Element dimensions */}
-                  <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                    <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Element Size</h4>
-                    <p className="text-xs font-mono text-gray-600 dark:text-gray-400">
-                      {item.width} × {item.height}px
-                    </p>
-                  </div>
-                  
-                  {/* Images summary */}
-                  {item.images && item.images.length > 0 && (
-                    <button
-                      onClick={() => toggleItemExpansion(item.id)}
-                      className="flex items-center justify-between text-xs bg-blue-50 dark:bg-blue-900/30 p-2 rounded-md text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-                    >
-                      <span>
-                        <i className="fa-regular fa-image mr-1"></i>
-                        {item.images.length} {item.images.length === 1 ? 'image' : 'images'}
-                      </span>
-                      <i className={`fa-solid ${expandedItem === item.id ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                    </button>
-                  )}
-                  
-                  {/* Expanded image details */}
-                  {expandedItem === item.id && item.images && item.images.length > 0 && (
-                    <div className="mt-1 space-y-2 max-h-80 overflow-y-auto">
-                      {item.images.map((img, index) => (
-                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 p-2 text-xs">
-                          <div className="flex gap-2 mb-2">
-                            <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
-                              <img 
-                                src={img.src} 
-                                alt={img.alt || `Image ${index + 1}`} 
-                                className="h-full w-full object-contain cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedImage(img.src);
-                                }}
-                                onError={(e) => {
-                                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
-                                  e.currentTarget.classList.add('p-2');
-                                }}
-                              />
-                            </div>
-                            <div className="truncate">
-                              <div className="font-medium truncate">{new URL(img.src).pathname.split("/").pop()}</div>
-                              <div className="text-gray-500 dark:text-gray-400 truncate">{img.alt || "No alt text"}</div>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Rendered</span>
-                              <span className="font-mono">{img.renderedWidth}×{img.renderedHeight}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Intrinsic</span>
-                              <span className="font-mono">{img.intrinsicWidth}×{img.intrinsicHeight}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Aspect Ratio</span>
-                              <span className="font-mono">{img.aspectRatio}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Scale Factor</span>
-                              <span className="font-mono">
-                                {(() => {
-                                  const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
-                                  let scaleClass = "text-gray-700 dark:text-gray-300";
-                                  
-                                  if (scale > 100) {
-                                    scaleClass = "text-orange-600 dark:text-orange-400";
-                                  } else if (scale < 90) {
-                                    scaleClass = "text-blue-600 dark:text-blue-400";
-                                  }
-                                  
-                                  return (
-                                    <span className={scaleClass}>
-                                      {scale}%
-                                      <span className="ml-1 text-[9px] block truncate">
-                                        {scale > 100 ? '(upscaled)' : scale < 90 ? '(downscaled)' : ''}
-                                      </span>
-                                    </span>
-                                  );
-                                })()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+          {getCurrentItems().nonBulkItems.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {getCurrentItems().nonBulkItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
+                >
+                  <div className="aspect-video bg-gray-100 dark:bg-gray-900 relative overflow-hidden flex items-center justify-center">
+                    <img
+                      src={item.screenshotUrl}
+                      alt={`Screenshot of ${item.selector}`}
+                      className="object-contain w-full h-full cursor-pointer"
+                      onClick={() => setSelectedImage(item.screenshotUrl)}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs py-1 px-2 truncate">
+                      {item.selector}
                     </div>
-                  )}
-                  
-                  {/* Actions */}
-                  <div className="flex justify-end gap-1 mt-1">
-                    <button
-                      onClick={() => deleteScreenshot(item.id, item.cloudinaryId)}
-                      className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                      title="Delete Screenshot"
-                    >
-                      <i className="fa-solid fa-trash-can"></i>
-                    </button>
-                    <button
-                      onClick={() => copyImageUrl(item.screenshotUrl)}
-                      className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Copy URL"
-                    >
-                      <i className="fa-regular fa-clipboard"></i>
-                    </button>
-                    <button
-                      onClick={() => window.open(item.screenshotUrl, "_blank")}
-                      className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      title="View Full Size"
-                    >
-                      <i className="fa-solid fa-arrow-up-right-from-square"></i>
-                    </button>
+                  </div>
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-gray-900 dark:text-white truncate max-w-[150px] text-sm">
+                        {new URL(item.url).hostname}
+                      </h3>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatDate(item.timestamp).split(",")[0]}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2 mt-2">
+                      {/* Element dimensions */}
+                      <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
+                        <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Element Size</h4>
+                        <p className="text-xs font-mono text-gray-600 dark:text-gray-400">
+                          {item.width} × {item.height}px
+                        </p>
+                      </div>
+                      
+                      {/* Images summary */}
+                      {item.images && item.images.length > 0 && (
+                        <button
+                          onClick={() => toggleItemExpansion(item.id)}
+                          className="flex items-center justify-between text-xs bg-blue-50 dark:bg-blue-900/30 p-2 rounded-md text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                        >
+                          <span>
+                            <i className="fa-regular fa-image mr-1"></i>
+                            {item.images.length} {item.images.length === 1 ? 'image' : 'images'}
+                          </span>
+                          <i className={`fa-solid ${expandedItem === item.id ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                        </button>
+                      )}
+                      
+                      {/* Expanded image details */}
+                      {expandedItem === item.id && item.images && item.images.length > 0 && (
+                        <div className="mt-1 space-y-2 max-h-80 overflow-y-auto">
+                          {item.images.map((img, index) => (
+                            <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 p-2 text-xs">
+                              <div className="flex gap-2 mb-2">
+                                <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
+                                  <img 
+                                    src={img.src} 
+                                    alt={img.alt || `Image ${index + 1}`} 
+                                    className="h-full w-full object-contain cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedImage(img.src);
+                                    }}
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
+                                      target.classList.add('p-2');
+                                    }}
+                                  />
+                                </div>
+                                <div className="truncate">
+                                  <div className="font-medium truncate">{new URL(img.src).pathname.split("/").pop()}</div>
+                                  <div className="text-gray-500 dark:text-gray-400 truncate">{img.alt || "No alt text"}</div>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                  <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Rendered</span>
+                                  <span className="font-mono">{img.renderedWidth}×{img.renderedHeight}</span>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                  <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Intrinsic</span>
+                                  <span className="font-mono">{img.intrinsicWidth}×{img.intrinsicHeight}</span>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                  <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Aspect Ratio</span>
+                                  <span className="font-mono">{img.aspectRatio}</span>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                  <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Scale Factor</span>
+                                  <span className="font-mono">
+                                    {renderCompactScaleFactor(img)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Actions */}
+                      <div className="flex justify-end gap-1 mt-1">
+                        <button
+                          onClick={() =>
+                            deleteScreenshot(item.id, item.cloudinaryId)
+                          }
+                          className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                          title="Delete Screenshot"
+                        >
+                          <i className="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button
+                          onClick={() => copyImageUrl(item.screenshotUrl)}
+                          className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="Copy URL"
+                        >
+                          <i className="fa-regular fa-clipboard"></i>
+                        </button>
+                        <button
+                          onClick={() => window.open(item.screenshotUrl, "_blank")}
+                          className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          title="View Full Size"
+                        >
+                          <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
-
-      {/* Pagination UI */}
+      </div>
+      
       {totalPages > 1 && (
         <div className="mt-6 flex flex-col items-center justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
@@ -1164,8 +1194,8 @@ export default function ScreenshotHistory() {
           </div>
         </div>
       )}
-
-      {/* Image Modal for full-size viewing */}
+      
+      {/* Image Modal */}
       <ImageModal 
         imageSrc={selectedImage} 
         onClose={() => setSelectedImage(null)} 

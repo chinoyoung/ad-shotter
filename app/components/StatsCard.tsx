@@ -33,7 +33,7 @@ export default function StatsCard({
           {title}
         </h3>
         <div
-          className={`w-8 h-8 ${colorClasses[color]} flex items-center justify-center text-white text-sm`}
+          className={`w-8 h-8 ${colorClasses[color]} flex items-center rounded-full justify-center text-white text-sm`}
         >
           {icon}
         </div>
