@@ -78,45 +78,7 @@ export default function Sidebar({ isOpen = true }: { isOpen?: boolean }) {
             href="/presets"
             active={pathname?.includes("/presets")}
           />
-          <SidebarItem
-            icon={<i className="fa-solid fa-chart-line"></i>}
-            text="Analytics"
-            href="/analytics"
-          />
-          <SidebarItem
-            icon={<i className="fa-solid fa-calendar"></i>}
-            text="Calendar"
-            href="/calendar"
-          />
-          <SidebarItem
-            icon={<i className="fa-solid fa-envelope"></i>}
-            text="Inbox"
-            href="/inbox"
-          />
-          <SidebarItem
-            icon={<i className="fa-solid fa-gear"></i>}
-            text="Settings"
-            href="/settings"
-          />
         </ul>
-
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <h3 className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-            Recent Projects
-          </h3>
-          <ul>
-            <SidebarItem
-              icon={<i className="fa-solid fa-folder"></i>}
-              text="Website Redesign"
-              href="/projects/1"
-            />
-            <SidebarItem
-              icon={<i className="fa-solid fa-folder"></i>}
-              text="Mobile App"
-              href="/projects/2"
-            />
-          </ul>
-        </div>
       </div>
     </aside>
   );
