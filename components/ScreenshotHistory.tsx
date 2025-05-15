@@ -9,6 +9,8 @@ export interface ScreenshotHistoryItem {
   timestamp: number;
   url: string;
   selector: string;
+  category?: string;
+  subcategory?: string;
   viewportWidth: number;
   viewportHeight: number;
   screenshotUrl: string;
@@ -23,7 +25,9 @@ export interface ScreenshotHistoryItem {
 export default function ScreenshotHistory() {
   const [history, setHistory] = useState<ScreenshotHistoryItem[]>([]);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
-  const [expandedBulkGroup, setExpandedBulkGroup] = useState<string | null>(null);
+  const [expandedBulkGroup, setExpandedBulkGroup] = useState<string | null>(
+    null
+  );
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [loading, setLoading] = useState(true);
   // Add error state for displaying user-friendly messages
@@ -85,10 +89,10 @@ export default function ScreenshotHistory() {
   const getGroupedHistory = () => {
     // Create a map of bulk preset IDs to arrays of history items
     const groupedMap = new Map<string, ScreenshotHistoryItem[]>();
-    
+
     // Group for items not in a bulk preset
     const nonBulkItems: ScreenshotHistoryItem[] = [];
-    
+
     // Process all history items
     history.forEach((item) => {
       if (item.bulkPresetId) {
@@ -103,15 +107,15 @@ export default function ScreenshotHistory() {
         nonBulkItems.push(item);
       }
     });
-    
+
     // Sort items within each group by timestamp
     groupedMap.forEach((items) => {
       items.sort((a, b) => b.timestamp - a.timestamp);
     });
-    
+
     // Sort non-bulk items by timestamp (newest first)
     nonBulkItems.sort((a, b) => b.timestamp - a.timestamp);
-    
+
     return {
       bulkGroups: Array.from(groupedMap.entries()),
       nonBulkItems,
@@ -121,7 +125,7 @@ export default function ScreenshotHistory() {
   // Calculate the current items to display based on pagination
   const getCurrentItems = () => {
     const { bulkGroups, nonBulkItems } = getGroupedHistory();
-    
+
     // When we have bulk groups, we need special handling for pagination
     if (bulkGroups.length > 0) {
       // For simplicity in this implementation, we'll show all bulk groups
@@ -132,9 +136,9 @@ export default function ScreenshotHistory() {
       // No bulk groups, just paginate the non-bulk items
       const startIndex = (currentPage - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
-      return { 
-        bulkGroups: [], 
-        nonBulkItems: nonBulkItems.slice(startIndex, endIndex) 
+      return {
+        bulkGroups: [],
+        nonBulkItems: nonBulkItems.slice(startIndex, endIndex),
       };
     }
   };
@@ -157,7 +161,9 @@ export default function ScreenshotHistory() {
   }, []);
 
   // Calculate total pages for pagination
-  const totalPages = Math.ceil(getGroupedHistory().nonBulkItems.length / itemsPerPage);
+  const totalPages = Math.ceil(
+    getGroupedHistory().nonBulkItems.length / itemsPerPage
+  );
 
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
@@ -198,7 +204,7 @@ export default function ScreenshotHistory() {
   // Toggle expanded bulk group
   const toggleBulkGroupExpansion = (bulkPresetId: string | undefined) => {
     if (!bulkPresetId) return;
-    
+
     if (expandedBulkGroup === bulkPresetId) {
       setExpandedBulkGroup(null);
     } else {
@@ -425,29 +431,35 @@ export default function ScreenshotHistory() {
               </div>
             </div>
           )}
-          
+
           {/* Render bulk groups first */}
           {getCurrentItems().bulkGroups.map(([bulkPresetId, items]) => (
             <div key={bulkPresetId} className="mb-6">
-              <div 
+              <div
                 className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3 rounded-t-lg border border-blue-200 dark:border-blue-800 cursor-pointer"
                 onClick={() => toggleBulkGroupExpansion(bulkPresetId)}
               >
                 <h3 className="text-sm font-medium flex items-center">
                   <i className="fa-solid fa-layer-group mr-2"></i>
-                  {items[0]?.bulkPresetName || 'Bulk Screenshots'} 
+                  {items[0]?.bulkPresetName || "Bulk Screenshots"}
                   <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">
                     {items.length} screenshots
                   </span>
                 </h3>
                 <button className="p-1 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded">
-                  <i className={`fa-solid ${expandedBulkGroup === bulkPresetId ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                  <i
+                    className={`fa-solid ${
+                      expandedBulkGroup === bulkPresetId
+                        ? "fa-chevron-up"
+                        : "fa-chevron-down"
+                    }`}
+                  ></i>
                 </button>
               </div>
-              
+
               {expandedBulkGroup === bulkPresetId && (
                 <div className="border border-t-0 border-blue-200 dark:border-blue-800 rounded-b-lg p-4 bg-white dark:bg-gray-800 space-y-4">
-                  {items.map(item => (
+                  {items.map((item) => (
                     <div
                       key={item.id}
                       className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -483,11 +495,13 @@ export default function ScreenshotHistory() {
                           >
                             {expandedItem === item.id ? (
                               <>
-                                <i className="fa-solid fa-chevron-up mr-1"></i> Less
+                                <i className="fa-solid fa-chevron-up mr-1"></i>{" "}
+                                Less
                               </>
                             ) : (
                               <>
-                                <i className="fa-solid fa-chevron-down mr-1"></i> More
+                                <i className="fa-solid fa-chevron-down mr-1"></i>{" "}
+                                More
                               </>
                             )}
                           </button>
@@ -508,7 +522,8 @@ export default function ScreenshotHistory() {
                             className="object-contain cursor-pointer"
                             onClick={() => setSelectedImage(item.screenshotUrl)}
                             style={{
-                              maxHeight: expandedItem === item.id ? "500px" : "200px",
+                              maxHeight:
+                                expandedItem === item.id ? "500px" : "200px",
                               maxWidth: "100%",
                             }}
                           />
@@ -553,15 +568,19 @@ export default function ScreenshotHistory() {
                                     >
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="h-14 w-14 bg-gray-100 dark:bg-gray-700 rounded-md flex-shrink-0 overflow-hidden">
-                                          <img 
-                                            src={img.src} 
-                                            alt={img.alt || `Image ${index + 1}`} 
+                                          <img
+                                            src={img.src}
+                                            alt={
+                                              img.alt || `Image ${index + 1}`
+                                            }
                                             className="h-full w-full object-contain"
                                           />
                                         </div>
                                         <div className="truncate">
                                           <div className="font-medium truncate">
-                                            {new URL(img.src).pathname.split("/").pop()}
+                                            {new URL(img.src).pathname
+                                              .split("/")
+                                              .pop()}
                                           </div>
                                           <div className="text-gray-500 dark:text-gray-400 truncate">
                                             {img.alt || "No alt text"}
@@ -579,7 +598,9 @@ export default function ScreenshotHistory() {
 
                       <div className="flex justify-end mt-3 gap-2">
                         <button
-                          onClick={() => deleteScreenshot(item.id, item.cloudinaryId)}
+                          onClick={() =>
+                            deleteScreenshot(item.id, item.cloudinaryId)
+                          }
                           className="px-2 py-1 text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 focus:outline-none border border-red-200 dark:border-red-800 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
                           <i className="fa-solid fa-trash-can mr-1"></i> Delete
@@ -588,10 +609,13 @@ export default function ScreenshotHistory() {
                           onClick={() => copyImageUrl(item.screenshotUrl)}
                           className="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                          <i className="fa-regular fa-clipboard mr-1"></i> Copy URL
+                          <i className="fa-regular fa-clipboard mr-1"></i> Copy
+                          URL
                         </button>
                         <button
-                          onClick={() => window.open(item.screenshotUrl, "_blank")}
+                          onClick={() =>
+                            window.open(item.screenshotUrl, "_blank")
+                          }
                           className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
                           <i className="fa-solid fa-arrow-up-right-from-square mr-1"></i>{" "}
@@ -604,7 +628,7 @@ export default function ScreenshotHistory() {
               )}
             </div>
           ))}
-          
+
           {/* Render non-bulk items */}
           {getCurrentItems().nonBulkItems.map((item) => (
             <div
@@ -712,9 +736,9 @@ export default function ScreenshotHistory() {
                             >
                               <div className="flex items-center gap-3 mb-3">
                                 <div className="h-14 w-14 bg-gray-100 dark:bg-gray-700 rounded-md flex-shrink-0 overflow-hidden">
-                                  <img 
-                                    src={img.src} 
-                                    alt={img.alt || `Image ${index + 1}`} 
+                                  <img
+                                    src={img.src}
+                                    alt={img.alt || `Image ${index + 1}`}
                                     className="h-full w-full object-contain cursor-pointer"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -731,46 +755,67 @@ export default function ScreenshotHistory() {
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                  <h4 className="text-xs font-medium mb-1">Rendered Size</h4>
+                                  <h4 className="text-xs font-medium mb-1">
+                                    Rendered Size
+                                  </h4>
                                   <p className="text-sm font-mono">
                                     {img.renderedWidth} × {img.renderedHeight}px
                                   </p>
                                 </div>
 
                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                  <h4 className="text-xs font-medium mb-1">Intrinsic Size</h4>
+                                  <h4 className="text-xs font-medium mb-1">
+                                    Intrinsic Size
+                                  </h4>
                                   <p className="text-sm font-mono">
-                                    {img.intrinsicWidth} × {img.intrinsicHeight}px
+                                    {img.intrinsicWidth} × {img.intrinsicHeight}
+                                    px
                                   </p>
                                 </div>
 
                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                  <h4 className="text-xs font-medium mb-1">Aspect Ratio</h4>
-                                  <p className="text-sm font-mono">{img.aspectRatio}</p>
+                                  <h4 className="text-xs font-medium mb-1">
+                                    Aspect Ratio
+                                  </h4>
+                                  <p className="text-sm font-mono">
+                                    {img.aspectRatio}
+                                  </p>
                                 </div>
 
                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                                  <h4 className="text-xs font-medium mb-1">Scale Factor</h4>
+                                  <h4 className="text-xs font-medium mb-1">
+                                    Scale Factor
+                                  </h4>
                                   <p className="text-sm font-mono">
                                     {(() => {
-                                      const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
+                                      const scale = Math.round(
+                                        (img.renderedWidth /
+                                          img.intrinsicWidth) *
+                                          100
+                                      );
                                       let scaleClass = "";
-                                      
+
                                       if (scale > 100) {
-                                        scaleClass = "text-orange-600 dark:text-orange-400";
+                                        scaleClass =
+                                          "text-orange-600 dark:text-orange-400";
                                       } else if (scale < 90) {
-                                        scaleClass = "text-blue-600 dark:text-blue-400";
+                                        scaleClass =
+                                          "text-blue-600 dark:text-blue-400";
                                       }
-                                      
+
                                       return (
                                         <span className={scaleClass}>
                                           {scale}%
                                           {scale !== 100 && (
                                             <span className="ml-1 text-xs">
-                                              ({scale > 100 ? 'upscaled' : 'downscaled'})
+                                              (
+                                              {scale > 100
+                                                ? "upscaled"
+                                                : "downscaled"}
+                                              )
                                             </span>
                                           )}
                                         </span>
@@ -838,26 +883,32 @@ export default function ScreenshotHistory() {
               </div>
             </div>
           )}
-          
+
           {/* Render bulk groups first */}
           {getCurrentItems().bulkGroups.map(([bulkPresetId, items]) => (
             <div key={bulkPresetId} className="col-span-full mb-6">
-              <div 
+              <div
                 className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3 rounded-t-lg border border-blue-200 dark:border-blue-800 cursor-pointer"
                 onClick={() => toggleBulkGroupExpansion(bulkPresetId)}
               >
                 <h3 className="text-sm font-medium flex items-center">
                   <i className="fa-solid fa-layer-group mr-2"></i>
-                  {items[0]?.bulkPresetName || 'Bulk Screenshots'} 
+                  {items[0]?.bulkPresetName || "Bulk Screenshots"}
                   <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">
                     {items.length} screenshots
                   </span>
                 </h3>
                 <button className="p-1 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded">
-                  <i className={`fa-solid ${expandedBulkGroup === bulkPresetId ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                  <i
+                    className={`fa-solid ${
+                      expandedBulkGroup === bulkPresetId
+                        ? "fa-chevron-up"
+                        : "fa-chevron-down"
+                    }`}
+                  ></i>
                 </button>
               </div>
-              
+
               {expandedBulkGroup === bulkPresetId && (
                 <div className="border border-t-0 border-blue-200 dark:border-blue-800 rounded-b-lg p-4 bg-white dark:bg-gray-800">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -889,16 +940,20 @@ export default function ScreenshotHistory() {
                           <div className="flex flex-col gap-2 mt-2">
                             {/* Element dimensions */}
                             <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                              <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Element Size</h4>
+                              <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                Element Size
+                              </h4>
                               <p className="text-xs font-mono text-gray-600 dark:text-gray-400">
                                 {item.width} × {item.height}px
                               </p>
                             </div>
-                            
+
                             {/* Actions */}
                             <div className="flex justify-end gap-1 mt-1">
                               <button
-                                onClick={() => deleteScreenshot(item.id, item.cloudinaryId)}
+                                onClick={() =>
+                                  deleteScreenshot(item.id, item.cloudinaryId)
+                                }
                                 className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                                 title="Delete Screenshot"
                               >
@@ -912,7 +967,9 @@ export default function ScreenshotHistory() {
                                 <i className="fa-regular fa-clipboard"></i>
                               </button>
                               <button
-                                onClick={() => window.open(item.screenshotUrl, "_blank")}
+                                onClick={() =>
+                                  window.open(item.screenshotUrl, "_blank")
+                                }
                                 className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                 title="View Full Size"
                               >
@@ -928,7 +985,7 @@ export default function ScreenshotHistory() {
               )}
             </div>
           ))}
-          
+
           {/* Render non-bulk items */}
           {getCurrentItems().nonBulkItems.map((item) => (
             <div
@@ -958,12 +1015,14 @@ export default function ScreenshotHistory() {
                 <div className="flex flex-col gap-2 mt-2">
                   {/* Element dimensions */}
                   <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                    <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Element Size</h4>
+                    <h4 className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                      Element Size
+                    </h4>
                     <p className="text-xs font-mono text-gray-600 dark:text-gray-400">
                       {item.width} × {item.height}px
                     </p>
                   </div>
-                  
+
                   {/* Images summary */}
                   {item.images && item.images.length > 0 && (
                     <button
@@ -972,85 +1031,128 @@ export default function ScreenshotHistory() {
                     >
                       <span>
                         <i className="fa-regular fa-image mr-1"></i>
-                        {item.images.length} {item.images.length === 1 ? 'image' : 'images'}
+                        {item.images.length}{" "}
+                        {item.images.length === 1 ? "image" : "images"}
                       </span>
-                      <i className={`fa-solid ${expandedItem === item.id ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                      <i
+                        className={`fa-solid ${
+                          expandedItem === item.id
+                            ? "fa-chevron-up"
+                            : "fa-chevron-down"
+                        }`}
+                      ></i>
                     </button>
                   )}
-                  
+
                   {/* Expanded image details */}
-                  {expandedItem === item.id && item.images && item.images.length > 0 && (
-                    <div className="mt-1 space-y-2 max-h-80 overflow-y-auto">
-                      {item.images.map((img, index) => (
-                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 p-2 text-xs">
-                          <div className="flex gap-2 mb-2">
-                            <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
-                              <img 
-                                src={img.src} 
-                                alt={img.alt || `Image ${index + 1}`} 
-                                className="h-full w-full object-contain cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedImage(img.src);
-                                }}
-                                onError={(e) => {
-                                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
-                                  e.currentTarget.classList.add('p-2');
-                                }}
-                              />
+                  {expandedItem === item.id &&
+                    item.images &&
+                    item.images.length > 0 && (
+                      <div className="mt-1 space-y-2 max-h-80 overflow-y-auto">
+                        {item.images.map((img, index) => (
+                          <div
+                            key={index}
+                            className="border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 p-2 text-xs"
+                          >
+                            <div className="flex gap-2 mb-2">
+                              <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded flex-shrink-0 overflow-hidden">
+                                <img
+                                  src={img.src}
+                                  alt={img.alt || `Image ${index + 1}`}
+                                  className="h-full w-full object-contain cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedImage(img.src);
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.src =
+                                      'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
+                                    e.currentTarget.classList.add("p-2");
+                                  }}
+                                />
+                              </div>
+                              <div className="truncate">
+                                <div className="font-medium truncate">
+                                  {new URL(img.src).pathname.split("/").pop()}
+                                </div>
+                                <div className="text-gray-500 dark:text-gray-400 truncate">
+                                  {img.alt || "No alt text"}
+                                </div>
+                              </div>
                             </div>
-                            <div className="truncate">
-                              <div className="font-medium truncate">{new URL(img.src).pathname.split("/").pop()}</div>
-                              <div className="text-gray-500 dark:text-gray-400 truncate">{img.alt || "No alt text"}</div>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Rendered</span>
-                              <span className="font-mono">{img.renderedWidth}×{img.renderedHeight}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Intrinsic</span>
-                              <span className="font-mono">{img.intrinsicWidth}×{img.intrinsicHeight}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Aspect Ratio</span>
-                              <span className="font-mono">{img.aspectRatio}</span>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
-                              <span className="text-gray-500 dark:text-gray-400 block text-[10px]">Scale Factor</span>
-                              <span className="font-mono">
-                                {(() => {
-                                  const scale = Math.round((img.renderedWidth / img.intrinsicWidth) * 100);
-                                  let scaleClass = "text-gray-700 dark:text-gray-300";
-                                  
-                                  if (scale > 100) {
-                                    scaleClass = "text-orange-600 dark:text-orange-400";
-                                  } else if (scale < 90) {
-                                    scaleClass = "text-blue-600 dark:text-blue-400";
-                                  }
-                                  
-                                  return (
-                                    <span className={scaleClass}>
-                                      {scale}%
-                                      <span className="ml-1 text-[9px] block truncate">
-                                        {scale > 100 ? '(upscaled)' : scale < 90 ? '(downscaled)' : ''}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                                  Rendered
+                                </span>
+                                <span className="font-mono">
+                                  {img.renderedWidth}×{img.renderedHeight}
+                                </span>
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                                  Intrinsic
+                                </span>
+                                <span className="font-mono">
+                                  {img.intrinsicWidth}×{img.intrinsicHeight}
+                                </span>
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                                  Aspect Ratio
+                                </span>
+                                <span className="font-mono">
+                                  {img.aspectRatio}
+                                </span>
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-700 p-1.5 rounded">
+                                <span className="text-gray-500 dark:text-gray-400 block text-[10px]">
+                                  Scale Factor
+                                </span>
+                                <span className="font-mono">
+                                  {(() => {
+                                    const scale = Math.round(
+                                      (img.renderedWidth / img.intrinsicWidth) *
+                                        100
+                                    );
+                                    let scaleClass =
+                                      "text-gray-700 dark:text-gray-300";
+
+                                    if (scale > 100) {
+                                      scaleClass =
+                                        "text-orange-600 dark:text-orange-400";
+                                    } else if (scale < 90) {
+                                      scaleClass =
+                                        "text-blue-600 dark:text-blue-400";
+                                    }
+
+                                    return (
+                                      <span className={scaleClass}>
+                                        {scale}%
+                                        <span className="ml-1 text-[9px] block truncate">
+                                          {scale > 100
+                                            ? "(upscaled)"
+                                            : scale < 90
+                                            ? "(downscaled)"
+                                            : ""}
+                                        </span>
                                       </span>
-                                    </span>
-                                  );
-                                })()}
-                              </span>
+                                    );
+                                  })()}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
+                        ))}
+                      </div>
+                    )}
+
                   {/* Actions */}
                   <div className="flex justify-end gap-1 mt-1">
                     <button
-                      onClick={() => deleteScreenshot(item.id, item.cloudinaryId)}
+                      onClick={() =>
+                        deleteScreenshot(item.id, item.cloudinaryId)
+                      }
                       className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                       title="Delete Screenshot"
                     >
@@ -1166,9 +1268,9 @@ export default function ScreenshotHistory() {
       )}
 
       {/* Image Modal for full-size viewing */}
-      <ImageModal 
-        imageSrc={selectedImage} 
-        onClose={() => setSelectedImage(null)} 
+      <ImageModal
+        imageSrc={selectedImage}
+        onClose={() => setSelectedImage(null)}
       />
     </div>
   );

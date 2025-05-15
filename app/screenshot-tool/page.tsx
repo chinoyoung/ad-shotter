@@ -51,6 +51,8 @@ export default function ScreenshotToolPage() {
     Array<{
       url: string;
       selector: string;
+      category?: string;
+      subcategory?: string;
       result: ScreenshotResult | null;
       error: string | null;
     }>
@@ -265,6 +267,8 @@ export default function ScreenshotToolPage() {
     const initialResults = currentBulkPreset.items.map((item) => ({
       url: item.url,
       selector: item.selector,
+      category: item.category,
+      subcategory: item.subcategory,
       result: null as ScreenshotResult | null,
       error: null as string | null,
     }));
@@ -317,6 +321,8 @@ export default function ScreenshotToolPage() {
           timestamp: Date.now(),
           url: item.url,
           selector: item.selector,
+          category: item.category,
+          subcategory: item.subcategory,
           viewportWidth: currentBulkPreset.viewportWidth,
           viewportHeight: currentBulkPreset.viewportHeight,
           screenshotUrl: data.screenshotUrl,
@@ -541,6 +547,14 @@ export default function ScreenshotToolPage() {
                                 <p className="font-medium text-sm">
                                   {new URL(item.url).hostname}
                                 </p>
+                                {item.category && (
+                                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                    {item.category}
+                                    {item.subcategory
+                                      ? `: ${item.subcategory}`
+                                      : ""}
+                                  </p>
+                                )}
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                   {item.selector}
                                 </p>
